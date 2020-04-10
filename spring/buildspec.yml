@@ -1,0 +1,28 @@
+version: 0.2
+
+phases:
+  install:
+    commands:
+      - apt-get update -y
+      - apt-get install -y software-properties-common
+      - add-apt-repository ppa:openjdk-r/ppa
+      - apt-get update -y
+      - apt-get install -y openjdk-8-jdk
+      - apt-get install -y maven
+  pre_build:
+    commands:
+      - echo --- Logging in to Amazon ECR in eu-west-1... ---
+      - $(aws ecr get-login --region eu-west-1)
+  build:
+    commands:
+      - echo --- Build started on `date` ---
+      - echo -- Building notejam-spring... --
+      - cd spring
+      - bin/mvn-build.sh
+      - echo -- Building the Docker image --
+      - bin/docker-build.sh
+  post_build:
+    commands:
+      - echo --- Build completed on `date` ---
+      - echo -- Pushing the Docker image... --
+      - spring/bin/docker-tag-and-push.sh
